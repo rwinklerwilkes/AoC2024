@@ -66,5 +66,45 @@ def part_one(data):
     answer = len(visited)
     return answer
 
+def part_two(data):
+    parsed_data, start = parse_data(data)
+
+    visited = set()
+
+    pos = start
+    dir = 0
+    while dir != -1:
+        visited.add(tuple(pos))
+        pos, dir = move(parsed_data, pos, dir)
+
+    number_of_loops = 0
+    for t in visited:
+        pos = start
+        dir = 0
+
+        prior_states = set()
+        new_visited = set()
+        is_loop = False
+        parsed_data_obstructed = parsed_data.copy()
+        parsed_data_obstructed[t[0],t[1]] = '#'
+        while dir != -1 and not is_loop:
+            cur_pos = tuple(pos)
+            cur_state = cur_pos + tuple([dir])
+            if cur_state in prior_states:
+                is_loop = True
+            new_visited.add(cur_pos)
+            prior_states.add(cur_state)
+            pos, dir = move(parsed_data_obstructed, pos, dir)
+        if is_loop:
+            number_of_loops += 1
+
+    answer = number_of_loops
+    return answer
+
 part_one_example_answer = part_one(example_data)
+assert part_one_example_answer == 41
 part_one_answer = part_one(data)
+
+part_two_example_answer = part_two(example_data)
+assert part_two_example_answer == 6
+part_two_answer = part_two(data)

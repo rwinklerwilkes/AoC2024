@@ -69,7 +69,7 @@ def calculate_perimeter(region):
         perimeter += sides_not_touching
     return perimeter
 
-def all_neighbors(grid, node):
+def all_neighbors(node):
     neighbor_dict = {'up':(-1,0),
                      'left':(0,-1),
                      'down':(1,0),
@@ -78,7 +78,7 @@ def all_neighbors(grid, node):
                      'ul':(-1,-1),
                      'dr':(1,1),
                      'dl':(1,-1)}
-    neighbors = {k:grid.get(tadd(node,v)) for k,v in neighbor_dict.items()}
+    neighbors = {k:tadd(node,v) for k,v in neighbor_dict.items()}
     return neighbors
 
 def count_corners(grid:dict, region:set):
@@ -87,23 +87,24 @@ def count_corners(grid:dict, region:set):
     while rgn:
         node = rgn.pop()
         nv = grid[node]
-        neighbors = all_neighbors(grid, node)
+        neighbors = all_neighbors(node)
+        neighbors_vals = {k:grid.get(v) for k,v in neighbors.items()}
         #Inside corners
         # UR
         # ##.
         # ###
         # ###
         # UR is different region, UU and RR is same region
-        if nv == neighbors['up'] and nv == neighbors['right'] and (nv != neighbors['ur']):
+        if nv == neighbors_vals['up'] and nv == neighbors_vals['right'] and neighbors['ur'] not in region:
             corners += 1
         # UL
-        if nv == neighbors['up'] and nv == neighbors['left'] and (nv != neighbors['ul']):
+        if nv == neighbors_vals['up'] and nv == neighbors_vals['left'] and neighbors['ul'] not in region:
             corners += 1
         # DR
-        if nv == neighbors['down'] and nv == neighbors['right'] and (nv != neighbors['dr']):
+        if nv == neighbors_vals['down'] and nv == neighbors_vals['right'] and neighbors['dr'] not in region:
             corners += 1
         # DL
-        if nv == neighbors['down'] and nv == neighbors['left'] and (nv != neighbors['dl']):
+        if nv == neighbors_vals['down'] and nv == neighbors_vals['left'] and neighbors['dl'] not in region:
             corners += 1
         #Outside corners
         # UR
@@ -111,17 +112,18 @@ def count_corners(grid:dict, region:set):
         # ##.
         # ##.
         # UR is different region, UU and RR are different region
-        if nv != neighbors['up'] and nv != neighbors['right'] and (nv != neighbors['ur']):
+        if nv != neighbors_vals['up'] and nv != neighbors_vals['right']:
             corners += 1
         # UL
-        if nv != neighbors['up'] and nv != neighbors['left'] and (nv != neighbors['ul']):
+        if nv != neighbors_vals['up'] and nv != neighbors_vals['left']:
             corners += 1
         # DR
-        if nv != neighbors['down'] and nv != neighbors['right'] and (nv != neighbors['dr']):
+        if nv != neighbors_vals['down'] and nv != neighbors_vals['right']:
             corners += 1
         # DL
-        if nv != neighbors['down'] and nv != neighbors['left'] and (nv != neighbors['dl']):
+        if nv != neighbors_vals['down'] and nv != neighbors_vals['left']:
             corners += 1
+
     return corners
 
 def get_answer(data, part_two = False):
@@ -166,13 +168,3 @@ part_two_example_answer_five = get_answer(example_data_five, part_two=True)
 assert part_two_example_answer_five == 368
 
 part_two_answer = get_answer(data, part_two=True)
-
-parsed_data = parse_data(example_data_five)
-remaining_nodes = set(parsed_data.keys())
-cur_node = remaining_nodes.pop()
-rgn = flood_fill(parsed_data, cur_node)
-remaining_nodes = remaining_nodes.difference(rgn)
-
-cur_node = remaining_nodes.pop()
-rgn = flood_fill(parsed_data, cur_node)
-count_corners(parsed_data, rgn)

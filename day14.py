@@ -37,7 +37,7 @@ class Robot:
             quadrant = 2
         else:
             quadrant = 3
-        return quadrant
+        return quadrant, tuple(cur_pos)
 
     def determine_position(self, t):
         return (self.p + t * self.v) % self.board_size
@@ -66,7 +66,8 @@ def part_one(data,w,h):
     parsed_data = parse_data(data,w,h)
     quad = defaultdict(int)
     for robot in parsed_data:
-        quad[robot.get_quadrant(100)] += 1
+        cur_quad, _ = robot.get_quadrant(100)
+        quad[cur_quad] += 1
     safety_factor = 1
     # print(quad)
     for k,v in quad.items():
@@ -80,16 +81,25 @@ def part_two(data, w, h):
     done = False
     t = 0
     while not done:
+        all_pos = set()
+        all_unique = True
         for robot in parsed_data:
+            cur_quad, cur_pos = robot.get_quadrant(t)
+            if cur_pos in all_pos:
+                all_unique = False
+                break
+            else:
+                all_pos.add(cur_pos)
             quad[robot.get_quadrant(t)] += 1
-        if quad[0] == quad[1] and quad[2] == quad[3]:
-            print(t)
+        if all_unique:
+            unique_time = t
             done = True
         t += 1
-    return t
+    answer = unique_time
+    return answer
 
 part_one_example_answer = part_one(example_data, 11, 7)
 assert part_one_example_answer == 12
 part_one_answer = part_one(data, 101, 103)
 
-t = part_two(data, 101, 103)
+part_two_answer = part_two(data, 101, 103)

@@ -1,31 +1,36 @@
 from aocd import get_data
 
 data = get_data(day=15,year=2024)
-example_data = """##########
-#..O..O.O#
-#......O.#
-#.OO..O.O#
-#..O@..O.#
-#O#..O...#
-#O..O..O.#
-#.OO.O.OO#
-#....O...#
-##########"""
+example_data = """########
+#..O.O.#
+##@.O..#
+#...O..#
+#.#.O..#
+#...O..#
+#......#
+########
+
+<^^>>>vv<v>>v<<"""
 
 def tadd(t1, t2):
     return (t1[0]+t2[0], t1[1]+t2[1])
 
+def tmult(t1, i):
+    return (t1[0]*i, t1[1]*i)
+
 def parse_data(data):
+    map_to_use, directions = data.split('\n\n')
+    directions = [c for c in directions if c!='\n']
     grid = {}
-    mxh = len(data.split('\n'))
-    mxw = len(data.split('\n')[0])
+    mxh = len(map_to_use.split('\n'))
+    mxw = len(map_to_use.split('\n')[0])
     start_pos = None
-    for i, row in enumerate(data.split('\n')):
+    for i, row in enumerate(map_to_use.split('\n')):
         for j,val in enumerate(row):
             if val == '@':
                 start_pos = (i,j)
             grid[(i,j)] = val
-    return grid, start_pos, mxh, mxw
+    return grid, start_pos, mxh, mxw, directions
 
 def print_grid(grid, mxh, mxw):
     b = [['_' for v in range(mxw)] for h in range(mxh)]
@@ -35,30 +40,51 @@ def print_grid(grid, mxh, mxw):
     print(output_board)
 
 def move(grid, pos, dir):
-    grid = grid.copy()
+    new_grid = grid.copy()
     dir_map = {'<':(0,-1),'^':(-1,0),'>':(0,1),'v':(1,0)}
     step_to_use = dir_map[dir]
     done = False
-    steps = []
+    moves = [(pos, pos)]
     cur_pos = pos
     while not done:
         step = tadd(cur_pos, step_to_use)
         next_pos = grid[step]
-        if next_pos == 'O':
-            steps.append(step)
-            cur_pos = step
-        elif next_pos == '.':
-            #move everything in steps
-            for s in reversed(steps):
-                next_pos = tadd(s, step_to_use)
-                grid[next_pos] = grid[s]
-            grid[pos] = '.'
+        if next_pos == '.':
+            moves = [(p, tadd(i, step_to_use)) for p,i in moves]
+            done = True
+        elif next_pos == 'O':
+            moves.append((step,step))
         elif next_pos == '#':
             #stop
             done = True
-    return grid, next_pos
+        cur_pos = step
 
-grid, start_pos, mxh, mxw = parse_data(example_data)
-new_grid, new_pos = move(grid, start_pos, '<')
-print(print_grid(grid, mxh, mxw))
-print(print_grid(new_grid, mxh, mxw))
+    new_locations = [m[1] for m in moves]
+    for orig, new in moves:
+        orig_val = grid[orig]
+        new_grid[new] = orig_val
+        if orig not in new_locations:
+            new_grid[orig] = '.'
+    new_pos = moves[0][1]
+    return new_grid, new_pos
+
+def score_grid(grid):
+    score = 0
+    for pos, val in grid.items():
+        if val == 'O':
+            score += 100*pos[0] + pos[1]
+    return score
+
+def part_one(data):
+    grid, start_pos, mxh, mxw, directions = parse_data(data)
+    # print_grid(grid, mxh, mxw)
+
+    new_grid, new_pos = grid, start_pos
+    for d in directions:
+        new_grid, new_pos = move(new_grid, new_pos, d)
+        # print_grid(new_grid, mxh, mxw)
+    answer = score_grid(new_grid)
+    return new_grid, mxh, mxw, answer
+
+new_grid, mxh, mxw, part_one_example_answer = part_one(example_data)
+_, _, _, part_one_answer = part_one(data)

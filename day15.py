@@ -149,8 +149,13 @@ def part_one(data):
 #
 
 def part_two(data):
-    grid, start_pos, mxh, mxw, directions = parse_data(example_data)
+    grid, start_pos, mxh, mxw, directions = parse_data(data)
     p2_grid, p2_start_pos = expand_map(grid, mxh, mxw)
+    new_grid, new_pos = p2_grid, p2_start_pos
+    for d in directions:
+        new_grid, new_pos = move_second_part(new_grid, new_pos, d)
+    answer = score_grid(new_grid)
+    return new_grid, mxh, mxw*2, answer
 
 example_data_part_two = """##########
 #..O..O.O#
@@ -174,19 +179,5 @@ vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
 ^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
 v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^"""
 
-print_grid(p2_grid, mxh, mxw*2)
-
-new_grid, new_pos = move_second_part(p2_grid, p2_start_pos, '^')
-print_grid(new_grid, mxh, mxw*2)
-
-new_grid, new_pos = move_second_part(new_grid, new_pos, '>')
-print_grid(new_grid, mxh, mxw*2)
-
-new_grid, new_pos = move_second_part(new_grid, new_pos, '>')
-print_grid(new_grid, mxh, mxw*2)
-
-debug_grid = new_grid.copy()
-debug_pos = new_pos
-
-new_grid, new_pos = move_second_part(debug_grid, debug_pos, 'v')
-print_grid(new_grid, mxh, mxw*2)
+new_grid, mxh, mxw, part_two_example_answer = part_two(example_data_part_two)
+_, _, _, part_two_answer = part_two(data)

@@ -15,6 +15,9 @@ example_data = """########
 def tadd(t1, t2):
     return (t1[0]+t2[0], t1[1]+t2[1])
 
+def tminus(t1, t2):
+    return (t1[0]-t2[0], t1[1]-t2[1])
+
 def tmult(t1, i):
     return (t1[0]*i, t1[1]*i)
 
@@ -48,8 +51,9 @@ def expand_map(grid, mxh, mxw):
                 new_grid[(i,new_j+1)] = '.'
             elif grid[(i,j)] == '@':
                 new_grid[(i,new_j)] = '@'
+                new_start_pos = (i,new_j)
                 new_grid[(i,new_j+1)] = '.'
-    return new_grid
+    return new_grid, new_start_pos
 
 def print_grid(grid, mxh, mxw):
     b = [['_' for v in range(mxw)] for h in range(mxh)]
@@ -87,23 +91,45 @@ def move(grid, pos, dir):
     new_pos = moves[0][1]
     return new_grid, new_pos
 
-def can_move(grid, pos, dir):
+def move_second_part(grid, pos, dir):
     new_grid = grid.copy()
     dir_map = {'<':(0,-1),'^':(-1,0),'>':(0,1),'v':(1,0)}
     step_to_use = dir_map[dir]
-    step = tadd(pos, step_to_use)
-    next_pos = grid[step]
-    if next_pos == '.':
-        return True, step
-    elif next_pos == '#':
-        return False, pos
-    else:
-        return can_move(grid, step, dir)
+    swap = []
+    stack = [pos]
+    new_pos = pos
+    dont_swap = False
+    while stack:
+        t = stack.pop()
+        if grid[t] == '#':
+            dont_swap = True
+            break
+        elif grid[t] == '.':
+            continue
+        t = tadd(t, step_to_use)
+        swap.append(t)
+        stack.append(t)
+        if step_to_use[0] and grid[t] == '[':
+            stack.append((t[0],t[1]+1))
+        if step_to_use[0] and grid[t] == ']':
+            stack.append((t[0],t[1]-1))
+    done = set()
+    if not dont_swap:
+        for new_pos in swap[::-1]:
+            if new_pos in done:
+                continue
+            done.add(new_pos)
+            prev_pos = tminus(new_pos,step_to_use)
+            new_grid[new_pos], new_grid[prev_pos] = new_grid[prev_pos], new_grid[new_pos]
+    return new_grid, new_pos
+
 
 def score_grid(grid):
     score = 0
     for pos, val in grid.items():
         if val == 'O':
+            score += 100*pos[0] + pos[1]
+        elif val == '[':
             score += 100*pos[0] + pos[1]
     return score
 
@@ -118,12 +144,49 @@ def part_one(data):
     answer = score_grid(new_grid)
     return new_grid, mxh, mxw, answer
 
-new_grid, mxh, mxw, part_one_example_answer = part_one(example_data)
-_, _, _, part_one_answer = part_one(data)
+# new_grid, mxh, mxw, part_one_example_answer = part_one(example_data)
+# _, _, _, part_one_answer = part_one(data)
+#
 
-p2_grid = expand_map(new_grid, mxh, mxw)
+def part_two(data):
+    grid, start_pos, mxh, mxw, directions = parse_data(example_data)
+    p2_grid, p2_start_pos = expand_map(grid, mxh, mxw)
+
+example_data_part_two = """##########
+#..O..O.O#
+#......O.#
+#.OO..O.O#
+#..O@..O.#
+#O#..O...#
+#O..O..O.#
+#.OO.O.OO#
+#....O...#
+##########
+
+<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^
+vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
+><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<
+<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^
+^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><
+^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^
+>^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^
+<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>
+^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
+v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^"""
+
 print_grid(p2_grid, mxh, mxw*2)
 
-grid, start_pos, mxh, mxw, directions = parse_data(example_data)
-print_grid(grid, mxh, mxw)
-can_move(grid, start_pos, '<')
+new_grid, new_pos = move_second_part(p2_grid, p2_start_pos, '^')
+print_grid(new_grid, mxh, mxw*2)
+
+new_grid, new_pos = move_second_part(new_grid, new_pos, '>')
+print_grid(new_grid, mxh, mxw*2)
+
+new_grid, new_pos = move_second_part(new_grid, new_pos, '>')
+print_grid(new_grid, mxh, mxw*2)
+
+debug_grid = new_grid.copy()
+debug_pos = new_pos
+
+new_grid, new_pos = move_second_part(debug_grid, debug_pos, 'v')
+print_grid(new_grid, mxh, mxw*2)

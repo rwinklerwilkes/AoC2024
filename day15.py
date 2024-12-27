@@ -32,6 +32,25 @@ def parse_data(data):
             grid[(i,j)] = val
     return grid, start_pos, mxh, mxw, directions
 
+def expand_map(grid, mxh, mxw):
+    new_grid = {}
+    for i in range(mxh):
+        for j in range(mxw):
+            new_j = j*2
+            if grid[(i,j)] == '#':
+                new_grid[(i,new_j)] = '#'
+                new_grid[(i,new_j+1)] = '#'
+            elif grid[(i,j)] == 'O':
+                new_grid[(i,new_j)] = '['
+                new_grid[(i,new_j+1)] = ']'
+            elif grid[(i,j)] == '.':
+                new_grid[(i,new_j)] = '.'
+                new_grid[(i,new_j+1)] = '.'
+            elif grid[(i,j)] == '@':
+                new_grid[(i,new_j)] = '@'
+                new_grid[(i,new_j+1)] = '.'
+    return new_grid
+
 def print_grid(grid, mxh, mxw):
     b = [['_' for v in range(mxw)] for h in range(mxh)]
     for k,v in grid.items():
@@ -88,3 +107,6 @@ def part_one(data):
 
 new_grid, mxh, mxw, part_one_example_answer = part_one(example_data)
 _, _, _, part_one_answer = part_one(data)
+
+p2_grid = expand_map(new_grid, mxh, mxw)
+print_grid(p2_grid, mxh, mxw*2)

@@ -87,6 +87,19 @@ def move(grid, pos, dir):
     new_pos = moves[0][1]
     return new_grid, new_pos
 
+def can_move(grid, pos, dir):
+    new_grid = grid.copy()
+    dir_map = {'<':(0,-1),'^':(-1,0),'>':(0,1),'v':(1,0)}
+    step_to_use = dir_map[dir]
+    step = tadd(pos, step_to_use)
+    next_pos = grid[step]
+    if next_pos == '.':
+        return True, step
+    elif next_pos == '#':
+        return False, pos
+    else:
+        return can_move(grid, step, dir)
+
 def score_grid(grid):
     score = 0
     for pos, val in grid.items():
@@ -110,3 +123,7 @@ _, _, _, part_one_answer = part_one(data)
 
 p2_grid = expand_map(new_grid, mxh, mxw)
 print_grid(p2_grid, mxh, mxw*2)
+
+grid, start_pos, mxh, mxw, directions = parse_data(example_data)
+print_grid(grid, mxh, mxw)
+can_move(grid, start_pos, '<')

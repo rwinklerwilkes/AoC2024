@@ -35,6 +35,7 @@ def constant_factory(value):
 
 def parse_data(data, mxx, mxy):
     grid = defaultdict(constant_factory('.'))
+
     for i, row in enumerate(data.split('\n')):
         x,y = [int(i) for i in row.split(',')]
         grid[(i,y,x)] = '#'
@@ -47,11 +48,25 @@ def parse_data(data, mxx, mxy):
         grid[(-1, mxy+1, i)] = '#'
     return grid
 
+def get_grid_at_t(grid, t, mxx, mxy):
+    grid_at_t = {(k[1],k[2]):v for k,v in grid.items() if k[0] < t}
+    for x in range(mxx):
+        for y in range(mxy):
+            if (y,x) not in grid_at_t:
+                grid_at_t[(y,x)] = '.'
+    return grid_at_t
+
 def print_grid(grid, t, mxh, mxw):
     b = [['_' for v in range(mxw)] for h in range(mxh)]
     for k,v in grid.items():
-        is_valid = k[1] >= 0 and k[1] < mxh and k[2] >= 0 and k[2] < mxw
-        if k[0] < t and is_valid:
+        is_valid = k[-2] >= 0 and k[-2] < mxh and k[-1] >= 0 and k[-1] < mxw
+        if len(k) == 2 and is_valid:
+            if v == '.':
+                new_v = '_'
+            else:
+                new_v = v
+            b[k[0]][k[1]] = new_v
+        if len(k) == 3 and k[0] < t and is_valid:
             b[k[1]][k[2]] = v
     output_board = '\n'.join(''.join(row) for row in b)
     print(output_board)
@@ -69,13 +84,13 @@ def get_neighbors(grid, pos, t):
     neighbors = {cdir: n for cdir, n in neighbors.items() if grid_at_time.get(n,'.') != '#'}
     return neighbors
 
-def dijkstra(grid, mxw, mxh, t):
+def dijkstra(grid, mxy, mxx, t):
     start = (0,0)
-    end = (mxw, mxh)
+    end = (mxy-1, mxx-1)
+    grid_at_t = get_grid_at_t(grid, t, mxy=mxy, mxx=mxx)
     dist = defaultdict(int)
-    for k,_ in grid.items():
-        if k[0] < t:
-            dist[(k[1],k[2])] = np.inf
+    for k,_ in grid_at_t.items():
+        dist[(k[0],k[1])] = np.inf
     prev = defaultdict(tuple)
     q = []
     hq.heappush(q, (0,start))
@@ -91,9 +106,14 @@ def dijkstra(grid, mxw, mxh, t):
                 prev[n] = u
                 dist[n] = alt
                 hq.heappush(q, (alt, n))
-    return dist, prev
+    answer = dist[end]
+    return dist, prev, answer
 
 grid = parse_data(example_data,6,6)
 print_grid(grid, 11, 7, 7)
+# grid_at_t = get_grid_at_t(grid, 11, 7, 7)
+# print_grid(grid_at_t, 11, 7, 7)
+dist, prev, answer = dijkstra(grid, 7, 7, 12)
 
-d, p = dijkstra(grid, 7, 7, 11)
+grid = parse_data(data, 70, 70)
+dist, prev, part_one_answer = dijkstra(grid, 1024, 71, 71)

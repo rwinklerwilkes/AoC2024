@@ -18,10 +18,9 @@ def parse_data(data):
     desired_patterns = pat.split('\n')
     return available_towels, desired_patterns
 
-already_seen = {}
-def can_make(available_towels:list, target:str):
+def can_make(already_seen:dict, available_towels:list, target:str):
     if target in already_seen:
-        return already_seen[target]
+        return already_seen, already_seen[target]
 
     ways = 0
     if len(target) == 0:
@@ -29,10 +28,24 @@ def can_make(available_towels:list, target:str):
 
     for towel in available_towels:
         if target.startswith(towel):
-            ways += can_make(available_towels, target[len(towel):])
+            ns, way = can_make(already_seen, available_towels, target[len(towel):])
+            for k,v in ns.items():
+                already_seen[k] = v
+            ways += way
     already_seen[target] = ways
-    return ways
+    return already_seen, ways
 
 #Read through code at https://github.com/jonathanpaulson/AdventOfCode/blob/master/2024/19.py to understand
-at, dp = parse_data(example_data)
-can_make(at, 'brwrr')
+def get_answer(data):
+    available_towels, desired_patterns = parse_data(data)
+    answer = 0
+    answer_part_two = 0
+    for pattern in desired_patterns:
+        s, num = can_make({}, available_towels, pattern)
+        if num > 0:
+            answer += 1
+            answer_part_two += num
+    return answer, answer_part_two
+
+part_one_example_answer = part_one(example_data)
+part_one_answer, part_two_answer = get_answer(data)

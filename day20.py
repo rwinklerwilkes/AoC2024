@@ -78,6 +78,9 @@ def cheat_spaces(grid, node):
                 ways_back.append(n)
     return ways_back
 
+def cheat_spaces_part_two(dist, path, node, cheat_time):
+    pass
+
 def manhattan(t1, t2):
     return abs(t1[0]-t2[0]) + abs(t1[1]-t2[1])
 
@@ -105,4 +108,34 @@ def part_one(data):
     answer = sum(meets_saved_threshold)
     return answer
 
+def part_two(data, cheat_time):
+    grid, start, end = parse_data(data)
+    start_dist, start_prev, total_length = dijkstra(grid, start, end)
+    end_dist, end_prev, _ = dijkstra(grid, end, start)
+    full_path = []
+    cn = end
+    while cn != start:
+        full_path.append(start_prev[cn])
+        cn = start_prev[cn]
+    full_path = list(reversed(full_path))
+
+    time_saved = defaultdict(int)
+    for i, current_node in enumerate(full_path):
+        current_dist = start_dist[current_node]
+        for other_node in full_path[i:]:
+            dist_diff = start_dist[other_node] - current_dist
+            if dist_diff < cheat_time:
+                continue
+            remaining_dist = end_dist[other_node]
+            cheat_dist = manhattan(current_node, other_node)
+            if cheat_dist <= 20:
+                savings = total_length - (current_dist + remaining_dist + cheat_dist)
+                time_saved[savings] += 1
+    meets_saved_threshold = [v for k,v in time_saved.items() if k >= cheat_time]
+    answer = sum(meets_saved_threshold)
+    return answer
+
 part_one_answer = part_one(data)
+
+part_two_example_answer = part_two(example_data, 50)
+part_two_answer = part_two(data, 100)

@@ -71,13 +71,13 @@ def rotate(cur_dir, want_dir):
     other_way = abs(all_directions[::-1].index(cur_dir)-all_directions[::-1].index(want_dir))
     return min(one_way, other_way)
 
-def dijkstra(grid, pos):
+def dijkstra(grid, pos, start_dir='right'):
     dist = {}
     for k,_ in grid.items():
         dist[k] = np.inf
     prev = defaultdict(tuple)
     q = []
-    hq.heappush(q, (0,pos,'right'))
+    hq.heappush(q, (0,pos,start_dir))
     dist[pos] = 0
 
     while q:
@@ -96,11 +96,28 @@ def part_one(data):
     grid, start_pos, end_pos, mxh, mxw = parse_data(data)
     dist, prev = dijkstra(grid, start_pos)
     answer = dist[end_pos]
-    return answer
+    return answer, dist, prev
 
-part_one_example_answer = part_one(example_data)
+part_one_example_answer, d, p = part_one(example_data)
 assert part_one_example_answer == 7036
-part_one_example_answer_two = part_one(example_data_two)
+part_one_example_answer_two, _, _ = part_one(example_data_two)
 assert part_one_example_answer_two == 11048
 
 part_one_answer = part_one(data)
+
+grid, start_pos, end_pos, mxh, mxw = parse_data(example_data_two)
+dist, prev = dijkstra(grid, start_pos)
+
+eds = [dijkstra(grid, end_pos, dir)[0] for dir in ['right','left','up','down']]
+res = set()
+for row in range(mxh):
+    for col in range(mxw):
+        for ed in eds:
+            start_len = dist[(row,col)]
+            end_len = ed[(row,col)]
+            if start_len + end_len == part_one_example_answer_two:
+                res.add((row,col))
+print(len(res))
+
+
+flip = {"right": "left", "left": "right", "up": "down", "down": "up"}

@@ -73,29 +73,30 @@ def rotate(cur_dir, want_dir):
 
 def dijkstra(grid, pos, start_dir='right'):
     dist = {}
-    for k,_ in grid.items():
-        dist[k] = np.inf
     prev = defaultdict(tuple)
     q = []
-    hq.heappush(q, (0,pos,start_dir))
-    dist[pos] = 0
+    hq.heappush(q, (0, pos, start_dir))
+    dist[(*pos,start_dir)] = 0
 
     while q:
         cnode = hq.heappop(q)
         p, u, current_direction = cnode
         all_neighbors = get_neighbors(grid, u)
+        current_dist = dist[(*u,current_direction)]
         for ndir, n in all_neighbors.items():
-            alt = dist[u] + rotate(current_direction, ndir) * 1000 + 1
-            if alt < dist[n]:
+            alt = current_dist + rotate(current_direction, ndir) * 1000 + 1
+            if (*n,ndir) not in dist or alt < dist[(*n,ndir)]:
                 prev[n] = u
-                dist[n] = alt
+                dist[(*n,ndir)] = alt
                 hq.heappush(q, (alt, n, ndir))
     return dist, prev
 
 def part_one(data):
     grid, start_pos, end_pos, mxh, mxw = parse_data(data)
     dist, prev = dijkstra(grid, start_pos)
-    answer = dist[end_pos]
+    answer = np.inf
+    for end_dir in ('left','right','down','up'):
+        answer = min(answer,dist.get((*end_pos,end_dir),np.inf))
     return answer, dist, prev
 
 part_one_example_answer, d, p = part_one(example_data)

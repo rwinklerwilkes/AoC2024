@@ -128,19 +128,18 @@ assert part_one_example_answer_two == 11048
 
 part_one_answer = part_one(data)
 
-grid, start_pos, end_pos, mxh, mxw = parse_data(example_data_two)
+grid, start_pos, end_pos, mxh, mxw = parse_data(data)
 dist, prev = dijkstra(grid, start_pos)
 
 eds, eds_prev = dijkstra_part_two(grid, [(*end_pos, d) for d in ['right','left','up','down']])
 res = set()
 for row in range(mxh):
     for col in range(mxw):
-        for ed in eds:
-            flip = {'up':'down','right':'left','left':'right','down':'up'}
-            for dir in ['up','down','left','right']:
-                if (row,col,dir) in dist and (row,col,flip[dir]) in ed:
-                    start_len = dist[(row, col, dir)]
-                    end_len = ed[(row, col, flip[dir])]
-                    if start_len + end_len == part_one_example_answer_two:
-                        res.add((row,col))
+        flip = {'up':'down','right':'left','left':'right','down':'up'}
+        for dir in ['up','down','left','right']:
+            if (row,col,dir) in dist and (row,col,flip[dir]) in eds:
+                start_len = dist[(row, col, dir)]
+                end_len = eds[(row, col, flip[dir])]
+                if start_len + end_len == part_one_answer:
+                    res.add((row,col))
 print(len(res))

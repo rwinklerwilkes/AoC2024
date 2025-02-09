@@ -91,6 +91,28 @@ def dijkstra(grid, pos, start_dir='right'):
                 hq.heappush(q, (alt, n, ndir))
     return dist, prev
 
+def dijkstra_part_two(grid, starts):
+    dist = {}
+    prev = defaultdict(tuple)
+    q = []
+    for sr, sc, sd in starts:
+        hq.heappush(q, (0, (sr, sc), sd))
+        dist[(*(sr, sc),sd)] = 0
+
+    while q:
+        cnode = hq.heappop(q)
+        p, u, current_direction = cnode
+        all_neighbors = get_neighbors(grid, u)
+        current_dist = dist[(*u,current_direction)]
+        for ndir, n in all_neighbors.items():
+            alt = current_dist + rotate(current_direction, ndir) * 1000 + 1
+            if (*n,ndir) not in dist or alt < dist[(*n,ndir)]:
+                prev[n] = u
+                dist[(*n,ndir)] = alt
+                hq.heappush(q, (alt, n, ndir))
+    return dist, prev
+
+
 def part_one(data):
     grid, start_pos, end_pos, mxh, mxw = parse_data(data)
     dist, prev = dijkstra(grid, start_pos)
@@ -109,16 +131,16 @@ part_one_answer = part_one(data)
 grid, start_pos, end_pos, mxh, mxw = parse_data(example_data_two)
 dist, prev = dijkstra(grid, start_pos)
 
-eds = [dijkstra(grid, end_pos, dir)[0] for dir in ['right','left','up','down']]
+eds, eds_prev = dijkstra_part_two(grid, [(*end_pos, d) for d in ['right','left','up','down']])
 res = set()
 for row in range(mxh):
     for col in range(mxw):
         for ed in eds:
-            start_len = dist[(row,col)]
-            end_len = ed[(row,col)]
-            if start_len + end_len == part_one_example_answer_two:
-                res.add((row,col))
+            flip = {'up':'down','right':'left','left':'right','down':'up'}
+            for dir in ['up','down','left','right']:
+                if (row,col,dir) in dist and (row,col,flip[dir]) in ed:
+                    start_len = dist[(row, col, dir)]
+                    end_len = ed[(row, col, flip[dir])]
+                    if start_len + end_len == part_one_example_answer_two:
+                        res.add((row,col))
 print(len(res))
-
-
-flip = {"right": "left", "left": "right", "up": "down", "down": "up"}
